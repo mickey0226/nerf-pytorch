@@ -46,12 +46,14 @@ class Embedder:
 
 
 def get_embedder(multires, i=0):
+    #埋め込みをする関数と埋め込み後の次元数を返す
     if i == -1:
         return nn.Identity(), 3
     
     embed_kwargs = {
                 'include_input' : True,
                 'input_dims' : 3,
+                #multi_resolution
                 'max_freq_log2' : multires-1,
                 'num_freqs' : multires,
                 'log_sampling' : True,

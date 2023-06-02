@@ -82,7 +82,8 @@ def load_blender_data(basedir, half_res=False, testskip=1):
     focal = .5 * W / np.tan(.5 * camera_angle_x)
     
     #４だけ外側に進んで,x軸中心に-30度回転して,ｙ方向にさまざまな角度で回転させる
-    #50個のレンダリングの姿勢を作る
+    #40個のレンダリングの姿勢を作る
+    #ここが納得いかないけど先に進んでいく。
     render_poses = torch.stack([pose_spherical(angle, -30.0, 4.0) for angle in np.linspace(-180,180,40+1)[:-1]], 0)
     print("render_poses shape",render_poses.shape)
     
@@ -93,6 +94,7 @@ def load_blender_data(basedir, half_res=False, testskip=1):
 
         imgs_half_res = np.zeros((imgs.shape[0], H, W, 4))
         for i, img in enumerate(imgs):
+            #これで画像を半分に縮小することができた
             imgs_half_res[i] = cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)
         imgs = imgs_half_res
         # imgs = tf.image.resize_area(imgs, [400, 400]).numpy()

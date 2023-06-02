@@ -1,3 +1,4 @@
+cd /data/mizuki/nerf-pytorch
 wget http://cseweb.ucsd.edu/~viscomp/projects/LF/papers/ECCV20/nerf/tiny_nerf_data.npz
 mkdir -p data
 cd data

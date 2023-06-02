@@ -535,7 +535,6 @@ def train():
 
     parser = config_parser()
     args = parser.parse_args()
-
     # Load data
     K = None
     if args.dataset_type == 'llff':
@@ -567,10 +566,11 @@ def train():
         print('NEAR FAR', near, far)
 
     elif args.dataset_type == 'blender':
+        #hwfはheight,width,foculの略
         images, poses, render_poses, hwf, i_split = load_blender_data(args.datadir, args.half_res, args.testskip)
         print('Loaded blender', images.shape, render_poses.shape, hwf, args.datadir)
         i_train, i_val, i_test = i_split
-
+        #おそらくnearとfarなのかな
         near = 2.
         far = 6.
 
@@ -611,14 +611,16 @@ def train():
     H, W, focal = hwf
     H, W = int(H), int(W)
     hwf = [H, W, focal]
-
+    #Kは内部行列
+    #3列目の部分には、中心の画像座標が入っている
+    #foculにsigmaとかが組み込まれている？？？（たてよこ同じだから）
     if K is None:
         K = np.array([
             [focal, 0, 0.5*W],
             [0, focal, 0.5*H],
             [0, 0, 1]
         ])
-
+    #テスト画像をレンダリングするかどうか
     if args.render_test:
         render_poses = np.array(poses[i_test])
 
@@ -627,13 +629,17 @@ def train():
     expname = args.expname
     os.makedirs(os.path.join(basedir, expname), exist_ok=True)
     f = os.path.join(basedir, expname, 'args.txt')
+    
     with open(f, 'w') as file:
         for arg in sorted(vars(args)):
+            #ここでオブジェクトの属性値を取得
             attr = getattr(args, arg)
             file.write('{} = {}\n'.format(arg, attr))
     if args.config is not None:
         f = os.path.join(basedir, expname, 'config.txt')
+        #存在しないファイルだったとしてもファイルが作られる
         with open(f, 'w') as file:
+            #読み取りモードで開き、内容を読み込む
             file.write(open(args.config, 'r').read())
 
     # Create nerf model
@@ -708,6 +714,7 @@ def train():
     # writer = SummaryWriter(os.path.join(basedir, 'summaries', expname))
     
     start = start + 1
+    exit()
     for i in trange(start, N_iters):
         time0 = time.time()
 
