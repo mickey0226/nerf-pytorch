@@ -21,11 +21,14 @@ class Embedder:
         embed_fns = []
         d = self.kwargs['input_dims']
         out_dim = 0
+        #ここはTrueで入っていく
         if self.kwargs['include_input']:
+            #入力をそのまま通過させる
             embed_fns.append(lambda x : x)
             out_dim += d
-            
+        #logスケールの周波数の最大値
         max_freq = self.kwargs['max_freq_log2']
+        #周波数の種類の数
         N_freqs = self.kwargs['num_freqs']
         
         if self.kwargs['log_sampling']:
@@ -34,6 +37,7 @@ class Embedder:
             freq_bands = torch.linspace(2.**0., 2.**max_freq, steps=N_freqs)
             
         for freq in freq_bands:
+            #ここではsinとかcosとかがでてきている
             for p_fn in self.kwargs['periodic_fns']:
                 embed_fns.append(lambda x, p_fn=p_fn, freq=freq : p_fn(x * freq))
                 out_dim += d

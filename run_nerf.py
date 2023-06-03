@@ -37,7 +37,9 @@ def batchify(fn, chunk):
 def run_network(inputs, viewdirs, fn, embed_fn, embeddirs_fn, netchunk=1024*64):
     """Prepares inputs and applies network 'fn'.
     """
+    print("inputs.shape: ", inputs.shape)
     inputs_flat = torch.reshape(inputs, [-1, inputs.shape[-1]])
+    print("inputs_flat.shape: ", inputs_flat.shape)
     embedded = embed_fn(inputs_flat)
 
     if viewdirs is not None:
@@ -178,26 +180,32 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
 def create_nerf(args):
     """Instantiate NeRF's MLP model.
     """
+    #埋め込みをする関数、入力の次元数が記述されている
     embed_fn, input_ch = get_embedder(args.multires, args.i_embed)
 
     input_ch_views = 0
     embeddirs_fn = None
+    #基本的にはuse_viewdirはTrueになっている
+    #args.i_embedが-1であるときは埋め込みを行わない
+    #位置にしても姿勢にしても埋め込みは行っている
     if args.use_viewdirs:
         embeddirs_fn, input_ch_views = get_embedder(args.multires_views, args.i_embed)
-    output_ch = 5 if args.N_importance > 0 else 4
+    output_ch = 5 if args.N_importance > 0 else 4 #これは何をしているんだろう
     skips = [4]
     model = NeRF(D=args.netdepth, W=args.netwidth,
                  input_ch=input_ch, output_ch=output_ch, skips=skips,
                  input_ch_views=input_ch_views, use_viewdirs=args.use_viewdirs).to(device)
+    #これによってパラメータをリストに変換することができた
     grad_vars = list(model.parameters())
 
     model_fine = None
+    #N_importance>0であるとき、model_fineを利用する
     if args.N_importance > 0:
         model_fine = NeRF(D=args.netdepth_fine, W=args.netwidth_fine,
                           input_ch=input_ch, output_ch=output_ch, skips=skips,
                           input_ch_views=input_ch_views, use_viewdirs=args.use_viewdirs).to(device)
         grad_vars += list(model_fine.parameters())
-
+    #args.netchunk=65536だった
     network_query_fn = lambda inputs, viewdirs, network_fn : run_network(inputs, viewdirs, network_fn,
                                                                 embed_fn=embed_fn,
                                                                 embeddirs_fn=embeddirs_fn,
@@ -213,6 +221,7 @@ def create_nerf(args):
     ##########################
 
     # Load checkpoints
+    #ここでモデルを読みこむことができる
     if args.ft_path is not None and args.ft_path!='None':
         ckpts = [args.ft_path]
     else:
@@ -222,9 +231,10 @@ def create_nerf(args):
     if len(ckpts) > 0 and not args.no_reload:
         ckpt_path = ckpts[-1]
         print('Reloading from', ckpt_path)
+        #.tarもtorch.loadで読み込むことができるのね
         ckpt = torch.load(ckpt_path)
-
         start = ckpt['global_step']
+        #optimizer.load_state_dict()でパラメータを読み込むことができる
         optimizer.load_state_dict(ckpt['optimizer_state_dict'])
 
         # Load model
@@ -255,7 +265,7 @@ def create_nerf(args):
     render_kwargs_test = {k : render_kwargs_train[k] for k in render_kwargs_train}
     render_kwargs_test['perturb'] = False
     render_kwargs_test['raw_noise_std'] = 0.
-
+    #返り値は訓練とテストに関する情報、
     return render_kwargs_train, render_kwargs_test, start, grad_vars, optimizer
 
 
@@ -714,7 +724,6 @@ def train():
     # writer = SummaryWriter(os.path.join(basedir, 'summaries', expname))
     
     start = start + 1
-    exit()
     for i in trange(start, N_iters):
         time0 = time.time()
 
@@ -792,6 +801,7 @@ def train():
         ################################
 
         dt = time.time()-time0
+        exit()
         # print(f"Step: {global_step}, Loss: {loss}, Time: {dt}")
         #####           end            #####
 
