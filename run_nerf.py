@@ -68,6 +68,7 @@ def batchify_rays(rays_flat, chunk=1024*32, **kwargs):
     return all_ret
 
 
+#kwargsで取得した要素はkwargs.items()で辞書形式に変換することができる
 def render(H, W, K, chunk=1024*32, rays=None, c2w=None, ndc=True,
                   near=0., far=1.,
                   use_viewdirs=False, c2w_staticcam=None,
@@ -77,6 +78,7 @@ def render(H, W, K, chunk=1024*32, rays=None, c2w=None, ndc=True,
       H: int. Height of image in pixels.
       W: int. Width of image in pixels.
       focal: float. Focal length of pinhole camera.
+      #chunkは一度に処理するrayの数
       chunk: int. Maximum number of rays to process simultaneously. Used to
         control maximum memory usage. Does not affect final results.
       rays: array of shape [2, batch_size, 3]. Ray origin and direction for
@@ -265,7 +267,7 @@ def create_nerf(args):
     render_kwargs_test = {k : render_kwargs_train[k] for k in render_kwargs_train}
     render_kwargs_test['perturb'] = False
     render_kwargs_test['raw_noise_std'] = 0.
-    #返り値は訓練とテストに関する情報、
+    #返り値は訓練とテストに関する情報,startは何回目から学習を再開するか
     return render_kwargs_train, render_kwargs_test, start, grad_vars, optimizer
 
 
@@ -660,6 +662,7 @@ def train():
         'near' : near,
         'far' : far,
     }
+    #辞書型をupdateすると既存のものは更新され、新しいものは追加される
     render_kwargs_train.update(bds_dict)
     render_kwargs_test.update(bds_dict)
 
@@ -672,6 +675,7 @@ def train():
         with torch.no_grad():
             if args.render_test:
                 # render_test switches to test poses
+                #テスト画像をレンダリングするときは画像を取得する
                 images = images[i_test]
             else:
                 # Default is smoother render_poses path
@@ -679,6 +683,7 @@ def train():
 
             testsavedir = os.path.join(basedir, expname, 'renderonly_{}_{:06d}'.format('test' if args.render_test else 'path', start))
             os.makedirs(testsavedir, exist_ok=True)
+            #poseの形状を確認する
             print('test poses shape', render_poses.shape)
 
             rgbs, _ = render_path(render_poses, hwf, K, args.chunk, render_kwargs_test, gt_imgs=images, savedir=testsavedir, render_factor=args.render_factor)
@@ -801,7 +806,7 @@ def train():
         ################################
 
         dt = time.time()-time0
-        exit()
+        #exit()
         # print(f"Step: {global_step}, Loss: {loss}, Time: {dt}")
         #####           end            #####
 

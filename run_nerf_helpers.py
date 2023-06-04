@@ -157,7 +157,9 @@ class NeRF(nn.Module):
 
 # Ray helpers
 def get_rays(H, W, K, c2w):
+    #linspaceで0からWまでの整数値の値をW個生成する
     i, j = torch.meshgrid(torch.linspace(0, W-1, W), torch.linspace(0, H-1, H))  # pytorch's meshgrid has indexing='ij'
+    #.t()で転置することができるのか。なにはともあれ800*800の行列が2つできた
     i = i.t()
     j = j.t()
     dirs = torch.stack([(i-K[0][2])/K[0][0], -(j-K[1][2])/K[1][1], -torch.ones_like(i)], -1)
